@@ -56,10 +56,10 @@ model.compile(
 )
 
 print("\nFit model on training data:")
-model.fit(ds_train, epochs=15, verbose=2, validation_data=ds_validation)
+model.fit(ds_train, epochs=20, verbose=2, validation_data=ds_validation)
 model.summary()
 
-print("\nEvaluate on test data:")
+print("\nEvaluate on validation data:")
 model.evaluate(ds_validation, verbose=2)
 
 model.save("neural-network/saved_model")
