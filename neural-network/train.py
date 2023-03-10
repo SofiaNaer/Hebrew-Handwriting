@@ -1,4 +1,3 @@
-# Imports needed
 import tensorflow as tf
 from tensorflow import keras
 from keras import layers
@@ -12,12 +11,13 @@ batch_size = 16
 
 model = keras.Sequential(
     [
-        layers.Input((28, 28, 1)),
-        layers.Conv2D(16, 3, padding="same"),
-        layers.Conv2D(32, 3, padding="same"),
-        layers.MaxPooling2D(),
+        layers.Input((28, 28, 1), name='image'),
+        layers.Conv2D(32, 3, padding="same", activation='relu', name='conv1'),
+        layers.Conv2D(64, 3, padding="same", activation='relu', name='conv2'),
+        layers.MaxPooling2D(pool_size=(2, 2)),
         layers.Flatten(),
-        layers.Dense(27),
+        layers.Dense(128, activation='relu', name='dense1'),
+        layers.Dense(27, activation='softmax', name='dense2'),
     ]
 )
 
@@ -49,7 +49,7 @@ ds_validation = tf.keras.preprocessing.image_dataset_from_directory(
 
 model.compile(
     optimizer=keras.optimizers.Adam(),
-    loss=[keras.losses.SparseCategoricalCrossentropy(from_logits=True),],
+    loss=[keras.losses.SparseCategoricalCrossentropy(from_logits=True), ],
     metrics=["accuracy"],
 )
 
