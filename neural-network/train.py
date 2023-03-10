@@ -60,4 +60,4 @@ model.summary()
 print("\nEvaluate on test data:")
 model.evaluate(ds_validation, verbose=2)
 
-model.save("saved_model/")
+model.save("neural-network/saved_model")
