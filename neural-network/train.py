@@ -7,7 +7,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 img_height = 28
 img_width = 28
-batch_size = 16
+batch_size = 32
 
 model = keras.Sequential(
     [
@@ -18,6 +18,7 @@ model = keras.Sequential(
         layers.MaxPooling2D(pool_size=(2, 2)),
         layers.Flatten(),
         layers.Dense(128, activation='relu', name='dense1'),
+        layers.Dropout(0.2),
         layers.Dense(27, activation='softmax', name='dense2'),
     ]
 )
@@ -31,7 +32,7 @@ ds_train = tf.keras.preprocessing.image_dataset_from_directory(
     image_size=(img_height, img_width),  # reshape if not in this size
     shuffle=True,
     seed=123,
-    validation_split=0.1,
+    validation_split=0.2,
     subset="training",
 )
 
@@ -44,7 +45,7 @@ ds_validation = tf.keras.preprocessing.image_dataset_from_directory(
     image_size=(img_height, img_width),  # reshape if not in this size
     shuffle=True,
     seed=123,
-    validation_split=0.1,
+    validation_split=0.2,
     subset="validation",
 )
 
@@ -55,7 +56,7 @@ model.compile(
 )
 
 print("\nFit model on training data:")
-model.fit(ds_train, epochs=15, verbose=2)
+model.fit(ds_train, epochs=30, verbose=2, validation_data=ds_validation)
 model.summary()
 
 print("\nEvaluate on test data:")
