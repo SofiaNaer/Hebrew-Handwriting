@@ -3,7 +3,6 @@ import tensorflow as tf
 from tensorflow import keras
 from keras import layers
 import os
-import numpy as np
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
@@ -23,10 +22,9 @@ model = keras.Sequential(
 )
 
 ds_train = tf.keras.preprocessing.image_dataset_from_directory(
-    "../dataset",
+    "dataset",
     labels="inferred",
     label_mode='int',  # categorical, binary
-    # class_names=['0', '1', '2', '3', ...]
     color_mode="grayscale",
     batch_size=batch_size,
     image_size=(img_height, img_width),  # reshape if not in this size
@@ -37,10 +35,9 @@ ds_train = tf.keras.preprocessing.image_dataset_from_directory(
 )
 
 ds_validation = tf.keras.preprocessing.image_dataset_from_directory(
-    "Hebrew_Dataset",
+    "dataset",
     labels="inferred",
     label_mode="int",  # categorical, binary
-    # class_names=['0', '1', '2', '3', ...]
     color_mode="grayscale",
     batch_size=batch_size,
     image_size=(img_height, img_width),  # reshape if not in this size
