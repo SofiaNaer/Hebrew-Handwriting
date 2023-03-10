@@ -29,8 +29,14 @@ print("the class index is: " + str(class_index) +
       " with value: " + str(prediction_value))
 
 # visualize prediction
+font = {'family': 'sans-serif',
+        'color':  'darkred',
+        'weight': 'normal',
+        'size': 16,
+        }
+
 plt.imshow(image)
 plt.title('Predicted letter: {}'.format(
-    alphabet_dict[class_index]))
+    alphabet_dict[class_index]), fontdict=font)
 plt.axis('off')
 plt.show()
