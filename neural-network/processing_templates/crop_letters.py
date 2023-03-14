@@ -8,6 +8,10 @@ output_folder = "neural-network\processing_templates\\results"
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
 
+rows = 13
+cols = 9
+
+
 # Loop through all subfolders in the input folder
 for root, dirs, files in os.walk(input_folder):
     for filename in files:
@@ -19,20 +23,14 @@ for root, dirs, files in os.walk(input_folder):
             _, binarized = cv2.threshold(
                 image, 127, 255, cv2.THRESH_BINARY_INV)
 
-            # cv2.imshow("im", binarized)
-            # cv2.waitKey(0)
-
             height, width = binarized.shape
-            square_width = width // 9
-            square_height = height // 13
+            square_width = width // cols
+            square_height = height // rows
 
-            binarized = binarized[0:height, 0:int(width * 0.95)]
+            binarized = binarized[0:height, 0:int(width * 0.94)]
 
-            # cv2.imshow("im", binarized)
-            # cv2.waitKey(0)
-
-            for row in range(13):
-                for col in range(9):
+            for row in range(rows):
+                for col in range(cols):
 
                     # Calculate the coordinates of the square
                     left = col * square_width
