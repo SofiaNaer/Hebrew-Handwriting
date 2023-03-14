@@ -1,25 +1,50 @@
+import os
 import cv2
 
-image = cv2.imread(
-    'neural-network\processing_templates\elka-template-01.jpg', cv2.IMREAD_GRAYSCALE)
-_, binarized = cv2.threshold(image, 127, 255, cv2.THRESH_OTSU)
+# Define the input and output folders
+input_folder = "neural-network\processing_templates\\filled_in_templates"
+output_folder = "neural-network\processing_templates\\results"
 
-height, width = binarized.shape
+if not os.path.exists(output_folder):
+    os.makedirs(output_folder)
 
-square_width = width // 9
-square_height = height // 13
+# Loop through all subfolders in the input folder
+for root, dirs, files in os.walk(input_folder):
+    for filename in files:
 
-# Loop through each square and save it as a separate image
-for row in range(13):
-    for col in range(9):
+        if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp')):
 
-        # Calculate the coordinates of the square
-        left = col * square_width
-        top = row * square_height
-        right = left + square_width
-        bottom = top + square_height
+            image = cv2.imread(os.path.join(root, filename),
+                               cv2.IMREAD_GRAYSCALE)
+            _, binarized = cv2.threshold(
+                image, 127, 255, cv2.THRESH_BINARY_INV)
 
-        square = binarized[top:bottom, left:right]
+            # cv2.imshow("im", binarized)
+            # cv2.waitKey(0)
 
-        cv2.imwrite(
-            f"neural-network/processing_templates/outputs_from_templates/output_square_{row}_{col}.jpg", square)
+            height, width = binarized.shape
+            square_width = width // 9
+            square_height = height // 13
+
+            binarized = binarized[0:height, 0:int(width * 0.95)]
+
+            # cv2.imshow("im", binarized)
+            # cv2.waitKey(0)
+
+            for row in range(13):
+                for col in range(9):
+
+                    # Calculate the coordinates of the square
+                    left = col * square_width
+                    top = row * square_height
+                    right = left + square_width
+                    bottom = top + square_height
+
+                    # Crop the binarized image to the square
+                    square = binarized[top:bottom, left:right]
+
+                    # Save the square as a JPEG file
+                    output_filename = f"{os.path.splitext(filename)[0]}_square_{row}_{col}.jpg"
+                    output_path = os.path.join(output_folder, output_filename)
+                    print(output_path)
+                    cv2.imwrite(output_path, square)
