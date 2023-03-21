@@ -49,6 +49,8 @@ ds_validation = tf.keras.preprocessing.image_dataset_from_directory(
     subset="validation",
 )
 
+print(ds_train.class_names)
+
 model.compile(
     optimizer=keras.optimizers.Adam(),
     loss=[keras.losses.SparseCategoricalCrossentropy()],
@@ -56,7 +58,7 @@ model.compile(
 )
 
 print("\nFit model on training data:")
-model.fit(ds_train, epochs=30, verbose=2, validation_data=ds_validation)
+model.fit(ds_train, epochs=60, verbose=2, validation_data=ds_validation)
 model.summary()
 
 print("\nEvaluate on validation data:")
