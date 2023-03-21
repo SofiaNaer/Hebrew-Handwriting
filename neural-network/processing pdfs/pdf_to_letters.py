@@ -25,7 +25,8 @@ for page_num in range(len(pdf_reader.pages)):
             x1 = x0 + square_width
             y1 = y0 + square_height
 
-            square = page.cropbox((x0, y0, x1, y1))
+            square = page.cropbox.lower_left = (x0, y0)
+            square = page.cropbox.upper_right = (x1, y1)
 
             # Save the square as an image
             image = square.convert('RGB')
