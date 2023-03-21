@@ -1,6 +1,6 @@
 import cv2
 
-image = cv2.imread('prototype/words/examples.png')
+image = cv2.imread('prototype/words/inline.jpg')
 gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
 
 # Apply thresholding to binarize the image
@@ -14,15 +14,12 @@ contours, hierarchy = cv2.findContours(
 # Define the range of aspect ratios for valid letters
 min_aspect_ratio = 0.2
 max_aspect_ratio = 1.5
-
-# Define the minimum and maximum area of a valid letter
 min_area = 10
 max_area = 5000
 
 cv2.imshow('word: ', thresh)
 cv2.waitKey(0)
 
-# Crop the individual letters and display the results
 for i, contour in enumerate(contours):
     # Get the bounding box of the contour
     (x, y, w, h) = cv2.boundingRect(contour)
@@ -38,10 +35,9 @@ for i, contour in enumerate(contours):
         approx = cv2.approxPolyDP(contour, 0.03 * perimeter, True)
 
         if len(approx) == 4:
-            # Crop the letter from the image
             letter = image[y:y+h, x:x+w]
+            cv2.imwrite(f'prototype/letter_{i}.jpg', letter)
 
-            # Display the cropped letter
             cv2.imshow('Letter {}'.format(i+1), letter)
             cv2.waitKey(0)
 
