@@ -1,4 +1,5 @@
 
 # ignore all files in directories:
 /neural-network/processing_templates/results/
+/prototype/letters/
 /dataset/

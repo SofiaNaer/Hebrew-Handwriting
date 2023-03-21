@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 model = keras.models.load_model("neural-network/saved_model")
-img_path = "dataset/13/220.jpg"
+img_path = "dataset/10110/22_51.png"
 
 alphabet_dict = {0: 'א', 1: 'ב', 2: 'ג', 3: 'ד', 4: 'ה', 5: 'ו', 6: 'ז', 7: 'ח', 8: 'ט',
                  9: 'י', 10: 'כ', 11: 'ן', 12: 'ל', 13: 'מ', 14: 'ם', 15: 'נ', 16: 'ן', 17: 'ס', 18: 'ע', 19: 'פ', 20: 'ף', 21: 'צ', 22: 'ץ', 23: 'ק', 24: 'ר', 25: 'ש', 26: 'ת'}
@@ -26,13 +26,13 @@ prediction_value = np.max(predictions)
 # print predictions results
 print(predictions)
 print("the class index is: " + str(class_index) +
-      " with value: " + str(prediction_value))
+      "     with a score of: " + str(prediction_value))
 
 # visualize prediction
 font = {'family': 'sans-serif',
         'color':  'darkred',
         'weight': 'normal',
-        'size': 16,
+        'size': 18,
         }
 
 plt.imshow(image)
