@@ -1,46 +1,54 @@
-import cv2
+from PIL import Image
+import numpy as np
 
-image = cv2.imread('prototype/words/inline.jpg')
-gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+# Load the image
+img = Image.open("prototype/sentences/sentence2.jpg")
 
-# Apply thresholding to binarize the image
-thresh = cv2.threshold(
-    gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
+# Convert the image to grayscale
+gray = img.convert("L")
 
-# Find contours of the individual letters
-contours, hierarchy = cv2.findContours(
-    thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+# Convert the image to a numpy array
+img_array = np.array(gray)
 
-# Define the range of aspect ratios for valid letters
-min_aspect_ratio = 0.2
-max_aspect_ratio = 1.5
-min_area = 10
-max_area = 5000
+# Threshold the image to convert it to a binary image
+threshold_value = 128
+thresholded = img_array > threshold_value
 
-cv2.imshow('word: ', thresh)
-cv2.waitKey(0)
+# Find the start and end of each letter
+letter_ranges = []
+in_letter = False
+for i in range(thresholded.shape[1]):
+    column = thresholded[:, i]
+    if column.any() and not in_letter:
+        letter_ranges.append((i,))
+        in_letter = True
+    elif not column.any() and in_letter:
+        letter_ranges[-1] = (letter_ranges[-1][0], i-1)
+        in_letter = False
+if in_letter:
+    letter_ranges[-1] = (letter_ranges[-1][0], thresholded.shape[1]-1)
 
-for i, contour in enumerate(contours):
-    # Get the bounding box of the contour
-    (x, y, w, h) = cv2.boundingRect(contour)
+# Find the letter widths and spaces between them
+letter_widths = []
+for start, end in letter_ranges:
+    width = end - start + 1
+    letter_widths.append(width)
 
-    # Calculate the aspect ratio and area of the bounding box
-    aspect_ratio = float(w) / h
-    area = w * h
+space_threshold = max(letter_widths) * 1.5
+spaces = []
+for i in range(len(letter_ranges)-1):
+    end_of_current_letter = letter_ranges[i][1]
+    start_of_next_letter = letter_ranges[i+1][0]
+    space_width = start_of_next_letter - end_of_current_letter - 1
+    if space_width > space_threshold:
+        spaces.append(end_of_current_letter)
 
-    # Check if the aspect ratio and area are within the valid range
-    if min_aspect_ratio < aspect_ratio < max_aspect_ratio and min_area < area < max_area:
-        # Check if the contour is approximately rectangular
-        perimeter = cv2.arcLength(contour, True)
-        approx = cv2.approxPolyDP(contour, 0.03 * perimeter, True)
+# Crop each letter and save it as a JPEG file
+for i, (start, end) in enumerate(letter_ranges):
+    letter_image = gray.crop((start, 0, end, gray.size[1]))
+    letter_image.save(f"letter{i}.jpg")
 
-        if len(approx) == 4:
-            letter = image[y:y+h, x:x+w]
-            cv2.imwrite(f'prototype/letter_{i}.jpg', letter)
-
-            cv2.imshow('Letter {}'.format(i+1), letter)
-            cv2.waitKey(0)
-
-# Wait for a key press and then close the windows
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+# Save the spaces as JPEG files with a "-" in the file name
+for i, space in enumerate(spaces):
+    space_image = gray.crop((space, 0, space+1, gray.size[1]))
+    space_image.save(f"space-{i}.jpg")

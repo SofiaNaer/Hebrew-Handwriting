@@ -32,7 +32,7 @@ print("the class index is: " + str(class_index) +
 font = {'family': 'sans-serif',
         'color':  'darkred',
         'weight': 'normal',
-        'size': 16,
+        'size': 18,
         }
 
 plt.imshow(image)
