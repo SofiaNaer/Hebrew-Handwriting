@@ -1,54 +1,38 @@
-from PIL import Image
+import os
+import cv2
 import numpy as np
 
-# Load the image
-img = Image.open("prototype/sentences/sentence2.jpg")
+# Load image and convert to grayscale
+img = cv2.imread('prototype/sentences/sentence2.jpg')
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-# Convert the image to grayscale
-gray = img.convert("L")
+# Apply bilateral filter to remove noise while preserving edges
+blur = cv2.bilateralFilter(gray, 9, 75, 75)
 
-# Convert the image to a numpy array
-img_array = np.array(gray)
+# Threshold image to create a binary image
+_, thresh = cv2.threshold(
+    blur, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
 
-# Threshold the image to convert it to a binary image
-threshold_value = 128
-thresholded = img_array > threshold_value
+# Remove noise by opening (erosion followed by dilation)
+kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
 
-# Find the start and end of each letter
-letter_ranges = []
-in_letter = False
-for i in range(thresholded.shape[1]):
-    column = thresholded[:, i]
-    if column.any() and not in_letter:
-        letter_ranges.append((i,))
-        in_letter = True
-    elif not column.any() and in_letter:
-        letter_ranges[-1] = (letter_ranges[-1][0], i-1)
-        in_letter = False
-if in_letter:
-    letter_ranges[-1] = (letter_ranges[-1][0], thresholded.shape[1]-1)
+cv2.imshow("", opening)
+cv2.waitKey(0)
 
-# Find the letter widths and spaces between them
-letter_widths = []
-for start, end in letter_ranges:
-    width = end - start + 1
-    letter_widths.append(width)
+# Find contours of the individual letters
+contours, hierarchy = cv2.findContours(
+    opening, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-space_threshold = max(letter_widths) * 1.5
-spaces = []
-for i in range(len(letter_ranges)-1):
-    end_of_current_letter = letter_ranges[i][1]
-    start_of_next_letter = letter_ranges[i+1][0]
-    space_width = start_of_next_letter - end_of_current_letter - 1
-    if space_width > space_threshold:
-        spaces.append(end_of_current_letter)
+# Create a directory to save the cropped images
+if not os.path.exists('prototype/letters'):
+    os.makedirs('prototype/letters')
 
-# Crop each letter and save it as a JPEG file
-for i, (start, end) in enumerate(letter_ranges):
-    letter_image = gray.crop((start, 0, end, gray.size[1]))
-    letter_image.save(f"letter{i}.jpg")
+# Iterate through the contours and crop each letter
+for i, contour in enumerate(contours):
+    # Get bounding box of contour
+    (x, y, w, h) = cv2.boundingRect(contour)
 
-# Save the spaces as JPEG files with a "-" in the file name
-for i, space in enumerate(spaces):
-    space_image = gray.crop((space, 0, space+1, gray.size[1]))
-    space_image.save(f"space-{i}.jpg")
+    # Crop the letter and save as a JPEG
+    letter = opening[y:y+h, x:x+w]
+    cv2.imwrite(f'prototype/letters/letter{i}.jpg', letter)

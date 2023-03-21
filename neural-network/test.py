@@ -26,7 +26,7 @@ prediction_value = np.max(predictions)
 # print predictions results
 print(predictions)
 print("the class index is: " + str(class_index) +
-      " with value: " + str(prediction_value))
+      "     with a score of: " + str(prediction_value))
 
 # visualize prediction
 font = {'family': 'sans-serif',
