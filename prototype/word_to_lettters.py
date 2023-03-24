@@ -33,13 +33,13 @@ def predict_letter(img_path, index):
 
     # print predictions results
     print(f"prediction ({index}): " + str(alphabet_dict[class_index]) +
-          "     with a score of: " + str(prediction_value) + "\n")
+          "     confidence level: " + str(prediction_value) + "\n")
 
     return [alphabet_dict[class_index], prediction_value]
 
 
 # Load image and convert to grayscale
-img = cv2.imread('prototype/sentences/ex_sentence.jpg')
+img = cv2.imread('prototype/sentences/alphabet.jpg')
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 # Apply bilateral filter to remove noise while preserving edges
@@ -56,7 +56,7 @@ opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
 # connect the letters which contain two parts:
 # Apply dilation to merge contours
 kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-opening = cv2.dilate(opening, kernel, iterations=2)
+opening = cv2.dilate(opening, kernel, iterations=3)
 
 cv2.namedWindow('sentence after pre-processing', cv2.WINDOW_KEEPRATIO)
 cv2.imshow("sentence after pre-processing", opening)
@@ -107,7 +107,6 @@ for i, contour in enumerate(contours):
         next_x = cv2.boundingRect(contours[i+1])[0]
         space_width = x - (next_x + cv2.boundingRect(contours[i+1])[2])
         print("space width: " + str(space_width))
-        # print("")
 
         if space_width > 1.5 * w:
             space = 255 * np.ones((h, space_width), np.uint8)
@@ -116,5 +115,5 @@ for i, contour in enumerate(contours):
 
 result = result[::-1]
 print("result: " + result)
-print("average value: " + str(round(total_value/i, 5)))
+print("average confidence level: " + str(round(total_value/i, 5)))
 cv2.destroyAllWindows()
