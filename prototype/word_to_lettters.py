@@ -35,7 +35,7 @@ def predict_letter(img_path, index):
     print(f"prediction ({index}): " + str(alphabet_dict[class_index]) +
           "     with a score of: " + str(prediction_value) + "\n")
 
-    return alphabet_dict[class_index]
+    return [alphabet_dict[class_index], prediction_value]
 
 
 # Load image and convert to grayscale
@@ -53,7 +53,14 @@ _, thresh = cv2.threshold(
 kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
 opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
 
-cv2.imshow("", opening)
+# connect the letters which contain two parts:
+# Apply dilation to merge contours
+kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+opening = cv2.dilate(opening, kernel, iterations=2)
+
+cv2.namedWindow('sentence after pre-processing', cv2.WINDOW_KEEPRATIO)
+cv2.imshow("sentence after pre-processing", opening)
+cv2.resizeWindow('sentence after pre-processing', 1000, 500)
 cv2.waitKey(0)
 
 # Find contours of the individual letters
@@ -70,6 +77,7 @@ if not os.path.exists('prototype/letters'):
     os.makedirs('prototype/letters')
 
 result = ''
+total_value = 0
 
 # Iterate through the contours and crop each letter
 for i, contour in enumerate(contours):
@@ -77,7 +85,7 @@ for i, contour in enumerate(contours):
     (x, y, w, h) = cv2.boundingRect(contour)
 
     # Check if contour is too small or too wide, it might be noise
-    if w < 5 or h < 5 or w//h > 4 or w/h < 0.1:
+    if w < 7 or h < 7 or w//h > 4 or w/h < 0.1:
         continue
 
     print("\nwidth: " + str(w) + " height: " + str(h))
@@ -88,7 +96,11 @@ for i, contour in enumerate(contours):
     # Crop the letter and save as a JPEG
     letter = opening[y:y+h, x:x+w]
     cv2.imwrite(f'prototype/letters/letter{i}.jpg', letter)
-    result += predict_letter(f"prototype/letters/letter{i}.jpg", i)
+
+    # use current model to predict the character
+    prediction, value = predict_letter(f"prototype/letters/letter{i}.jpg", i)
+    result += prediction
+    total_value += value
 
     # Add a space after each letter
     if i < len(contours) - 1:
@@ -100,7 +112,9 @@ for i, contour in enumerate(contours):
         if space_width > 1.5 * w:
             space = 255 * np.ones((h, space_width), np.uint8)
             result += ' '
-            cv2.imwrite(f'prototype/letters/space{i}.jpg', space)
+            cv2.imwrite(f'prototype/letters/letter{i}_space.jpg', space)
 
 result = result[::-1]
 print("result: " + result)
+print("average value: " + str(round(total_value/i, 5)))
+cv2.destroyAllWindows()
