@@ -39,7 +39,7 @@ def predict_letter(img_path, index):
 
 
 # Load image and convert to grayscale
-img = cv2.imread('prototype/sentences/alphabet.jpg')
+img = cv2.imread('prototype/sentences/ex_sentence_2.jpg')
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 # Apply bilateral filter to remove noise while preserving edges
