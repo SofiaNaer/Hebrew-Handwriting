@@ -57,7 +57,6 @@ opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
 
 # connect the letters which contain two parts:
 # Apply dilation to merge contours
-kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
 dilation = cv2.dilate(opening, kernel, iterations=2)
 
 cv2.namedWindow('sentence after pre-processing', cv2.WINDOW_KEEPRATIO)
@@ -101,6 +100,7 @@ total_value = 0
 for i, contour in enumerate(contours):
     # Get bounding box of contour
     (x, y, w, h) = cv2.boundingRect(contour)
+    h = h * 2
 
     # Check if contour is too small or too wide, it might be noise
     if w < 7 or h < 7 or w//h > 4 or w/h < 0.1:
@@ -109,10 +109,16 @@ for i, contour in enumerate(contours):
     print("\nwidth: " + str(w) + " height: " + str(h))
     print("aspect ratio: " + str(w/h))
 
-    # print(x, y, w, h)
+    # box coordinates
+    x1 = x
+    x2 = x + w
+    y1 = y - h//4
+    y2 = y + h//2
+
+    cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
     # Crop the letter and save as a JPEG
-    letter = opening[y:y+h, x:x+w]
+    letter = dilation[y1:y2, x1:x2]
     cv2.imwrite(f'prototype/letters/letter{i}.jpg', letter)
 
     # use current model to predict the character
@@ -130,6 +136,11 @@ for i, contour in enumerate(contours):
             space = 255 * np.ones((h, space_width), np.uint8)
             result += ' '
             cv2.imwrite(f'prototype/letters/letter{i}_space.jpg', space)
+
+cv2.namedWindow('image with boxes', cv2.WINDOW_KEEPRATIO)
+cv2.imshow("image with boxes", img)
+cv2.resizeWindow('image with boxes', 1280, 720)
+cv2.waitKey(0)
 
 result = result[::-1]
 print("result: " + result)
