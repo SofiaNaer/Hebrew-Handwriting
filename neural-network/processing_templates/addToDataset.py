@@ -72,7 +72,7 @@ class addToDataset:
                 elif file_name in self.list_lamed:
                     binary_dir = '01100'
                 elif file_name in self.list_mem:
-                    binary_dir = '1101'
+                    binary_dir = '01101'
                 elif file_name in self.list_mems:
                     binary_dir = '01110'
                 elif file_name in self.list_nun:

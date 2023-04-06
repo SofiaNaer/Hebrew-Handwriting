@@ -47,12 +47,16 @@ class Split:
                 right = left + square_size
                 lower = upper + square_size
                 # Crop the image using the current crop box
-                cropped_img = img.crop((left, upper, right, lower))
+                cropped_img = img.crop((left , upper, right, lower))
                 # Save the cropped image with a filename that includes the row and column numbers
+
                 filename = f'{self.count}.jpg'
                 filepath = os.path.join(self.output_folder, filename)
                 cropped_img.save(filepath)
                 self.count+=1
+
+
+
 
 
 Elram = Split('filled_in_templates/elram/after_preprocessing')
