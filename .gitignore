@@ -3,3 +3,6 @@
 /neural-network/processing_templates/results/
 /prototype/letters/
 /dataset/
+/neural-network/processing_templates/DataSet/
+/.vscode/
+/.idea/

@@ -39,8 +39,9 @@ def predict_letter(img_path, index):
 
 
 # Load image and convert to grayscale
-img = cv2.imread('prototype/sentences/ex_sentence_2.jpg')
+img = cv2.imread('prototype/sentences/ex_sentence.jpg')
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
 
 # Apply bilateral filter to remove noise while preserving edges
 blur = cv2.bilateralFilter(gray, 9, 75, 75)
@@ -49,6 +50,7 @@ blur = cv2.bilateralFilter(gray, 9, 75, 75)
 _, thresh = cv2.threshold(
     blur, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
 
+
 # Remove noise by opening (erosion followed by dilation)
 kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
 opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
@@ -56,16 +58,16 @@ opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
 # connect the letters which contain two parts:
 # Apply dilation to merge contours
 kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-opening = cv2.dilate(opening, kernel, iterations=3)
+dilation = cv2.dilate(opening, kernel, iterations=2)
 
 cv2.namedWindow('sentence after pre-processing', cv2.WINDOW_KEEPRATIO)
-cv2.imshow("sentence after pre-processing", opening)
+cv2.imshow("sentence after pre-processing", dilation)
 cv2.resizeWindow('sentence after pre-processing', 1000, 500)
 cv2.waitKey(0)
 
 # Find contours of the individual letters
 contours, hierarchy = cv2.findContours(
-    opening, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    dilation, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
 # Sort contours right to left to identify spaces between words
 contours = sorted(contours, key=lambda ctr: cv2.boundingRect(ctr)[
@@ -76,8 +78,24 @@ contours = sorted(contours, key=lambda ctr: cv2.boundingRect(ctr)[
 if not os.path.exists('prototype/letters'):
     os.makedirs('prototype/letters')
 
+# merged_contours = []
+# min_x_overlap = 5
+
+# for contour in contours:
+#     x, y, w, h = cv2.boundingRect(contour)
+#     if len(merged_contours) > 0:
+#         prev_x, prev_y, prev_w, prev_h = merged_contours[-1]
+#         if x - prev_x <= min_x_overlap:
+#             merged_contours[-1] = (prev_x, min(prev_y, y),
+#                                    x + w - prev_x, max(prev_h, h))
+#             continue
+#     merged_contours.append((x, y, w, h))
+
+
 result = ''
 total_value = 0
+
+# print(contours)
 
 # Iterate through the contours and crop each letter
 for i, contour in enumerate(contours):
