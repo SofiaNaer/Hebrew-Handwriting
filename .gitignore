@@ -1,8 +1,9 @@
 
-# ignore all files in directories:
+# ignore all files in these directories:
 /neural-network/processing_templates/results/
+/neural-network/processing_templates/filled_in_templates/results
+/neural-network/processing_templates/DataSet/
 /prototype/letters/
 /dataset/
-/neural-network/processing_templates/DataSet/
 /.vscode/
 /.idea/
