@@ -1,6 +1,5 @@
 import os
 import cv2
-from matplotlib import pyplot as plt
 
 # Define the input and output folders
 input_folder = "neural-network\processing_templates\\filled_in_templates"
@@ -86,3 +85,6 @@ for root, dirs, files in os.walk(input_folder):
                     cv2.imwrite(output_path, square)
 
                     max_letters = max_letters - 1
+
+
+
