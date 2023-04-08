@@ -4,8 +4,8 @@ import cv2
 class preprocess:
     def __init__(self):
 
-        input_folder = "filled_in_templates"
-        result_folder_name = 'after_preprocessing'
+        self.input_folder = "filled_in_templates"
+        self.result_folder_name = 'after_preprocessing'
         self.prepare_pict()
 
 
@@ -47,3 +47,6 @@ class preprocess:
                         new_folder_path, output_filename)
                     print(output_path)
                     cv2.imwrite(output_path, binarized)
+
+
+aviatar = preprocess();

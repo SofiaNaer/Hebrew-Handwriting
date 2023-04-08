@@ -3,10 +3,33 @@ import cv2
 import  os
 import uuid
 
+
+class Crop_every_image:
+    def __init__(self, path):
+        self.path = path
+        self.crop_image()
+
+
+    def crop_image (self):
+        for filename in os.listdir(self.path):
+            img = Image.open((os.path.join(self.path, filename)))
+            width, height = img.size
+
+            # calculate the amount of pixels to crop from each side
+            crop_amount = int(min(width, height) * 0.05)
+
+            # crop the image
+            img = img.crop((crop_amount, crop_amount, width - crop_amount, height - crop_amount))
+
+            # save the cropped image with the same name
+            img.save(os.path.join(self.path, filename))
+
+
 class Split:
     def __init__(self, path):
         self.count = 1
         self.path = path
+        
         unique_id = uuid.uuid4()
         dir_name = str(unique_id)
         self.output_folder = f"filled_in_templates/result/{dir_name}"
@@ -22,14 +45,6 @@ class Split:
                 filepath = os.path.join(self.path, filename)
                 image = Image.open(filepath)
                 self.split_page(image)
-
-
-
-
-
-
-
-
 
 
     def split_page(self, img):
@@ -55,8 +70,10 @@ class Split:
                 cropped_img.save(filepath)
                 self.count+=1
 
+        #cropEvery = Crop_every_image(self.output_folder)
 
 
 
 
-Elram = Split('filled_in_templates/elram/after_preprocessing')
+
+Elram = Split('filled_in_templates/aviatar/after_preprocessing')
