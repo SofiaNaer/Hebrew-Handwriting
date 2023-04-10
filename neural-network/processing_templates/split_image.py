@@ -1,20 +1,86 @@
 from PIL import Image
 import cv2
+import  os
+import uuid
+import time
+from addToDataset import  addToDataset
 
-template_path = 'neural-network/processing_templates/filled_in_templates/elram/elram-template-01.jpg'
-# image = cv2.imread(template_path, cv2.IMREAD_GRAYSCALE)
-img = Image.open(template_path)
+class Crop_every_image:
+    def __init__(self, path):
+        self.path = path
+        self.crop_image()
 
-width, height = img.size
-chopsize = width // 9
-print(chopsize)
 
-# Save Chops of original image
-for x0 in range(0, width, chopsize):
-    for y0 in range(0, height, chopsize):
-        box = (x0, y0,
-               x0+chopsize if x0+chopsize < width else width - 1,
-               y0+chopsize if y0+chopsize < height else height - 1)
-        print('%s %s' % (template_path, box))
-        img.crop(box).save('neural-network/processing_templates/results/letter.%s.x%03d.y%03d.jpg' %
-                           ('elram-template-01', x0, y0))
+
+
+    def crop_image (self):
+        for filename in os.listdir(self.path):
+            img = Image.open((os.path.join(self.path, filename)))
+            width, height = img.size
+
+            # calculate the amount of pixels to crop from each side
+            crop_amount = int(min(width, height) * 0.05)
+
+            # crop the image
+            img = img.crop((crop_amount, crop_amount, width - crop_amount, height - crop_amount))
+
+            # save the cropped image with the same name
+            img.save(os.path.join(self.path, filename))
+
+
+
+
+class Split:
+    def __init__(self, path):
+        print(path)
+        self.count = 1
+        self.path = path
+
+        unique_id = uuid.uuid4()
+        dir_name = str(unique_id)
+        self.output_folder = f"filled_in_templates/result/{dir_name}"
+        if not os.path.exists(self.output_folder):
+            os.makedirs(self.output_folder)
+        self.new_folder()
+
+
+
+    def new_folder(self):
+
+        for filename in os.listdir(self.path):
+            if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp')):
+                filepath = os.path.join(self.path, filename)
+                image = Image.open(filepath)
+                self.split_page(image)
+
+
+    def split_page(self, img):
+        width, height = img.size
+        square_size = min(width, height) // 9
+        # Crop the image into 117 squares
+        for j in range(13):
+            if self.count >= 243:
+                return
+            for i in range(9):
+                # Calculate the coordinates of the crop box for the current square
+
+                left = i * square_size
+                upper = j * square_size
+                right = left + square_size
+                lower = upper + square_size
+                # Crop the image using the current crop box
+                cropped_img = img.crop((left , upper, right, lower))
+                # Save the cropped image with a filename that includes the row and column numbers
+
+                filename = f'{self.count}.jpg'
+                filepath = os.path.join(self.output_folder, filename)
+                cropped_img.save(filepath)
+                self.count+=1
+
+        cropEvery = Crop_every_image(self.output_folder)
+
+
+
+
+
+
