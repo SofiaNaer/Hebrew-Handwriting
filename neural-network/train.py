@@ -3,6 +3,7 @@ from tensorflow import keras
 from keras import layers
 import os
 
+
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 img_height = 28
@@ -24,7 +25,7 @@ model = keras.Sequential(
 )
 
 ds_train = tf.keras.preprocessing.image_dataset_from_directory(
-    "dataset",
+    "../dataset",
     labels="inferred",
     label_mode='int',  # categorical, binary
     color_mode="grayscale",
@@ -37,7 +38,7 @@ ds_train = tf.keras.preprocessing.image_dataset_from_directory(
 )
 
 ds_validation = tf.keras.preprocessing.image_dataset_from_directory(
-    "dataset",
+    "../dataset",
     labels="inferred",
     label_mode="int",  # categorical, binary
     color_mode="grayscale",
@@ -58,7 +59,7 @@ model.compile(
 )
 
 print("\nFit model on training data:")
-model.fit(ds_train, epochs=60, verbose=2, validation_data=ds_validation)
+model.fit(ds_train, epochs=40, verbose=2, validation_data=ds_validation)
 model.summary()
 
 print("\nEvaluate on validation data:")
