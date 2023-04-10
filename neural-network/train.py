@@ -50,8 +50,6 @@ ds_validation = tf.keras.preprocessing.image_dataset_from_directory(
     subset="validation",
 )
 
-print(ds_train.class_names)
-
 model.compile(
     optimizer=keras.optimizers.Adam(),
     loss=[keras.losses.SparseCategoricalCrossentropy()],
