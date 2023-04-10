@@ -2,12 +2,15 @@ from PIL import Image
 import cv2
 import  os
 import uuid
-
+import time
+from addToDataset import  addToDataset
 
 class Crop_every_image:
     def __init__(self, path):
         self.path = path
         self.crop_image()
+
+
 
 
     def crop_image (self):
@@ -25,11 +28,14 @@ class Crop_every_image:
             img.save(os.path.join(self.path, filename))
 
 
+
+
 class Split:
     def __init__(self, path):
+        print(path)
         self.count = 1
         self.path = path
-        
+
         unique_id = uuid.uuid4()
         dir_name = str(unique_id)
         self.output_folder = f"filled_in_templates/result/{dir_name}"
@@ -40,6 +46,7 @@ class Split:
 
 
     def new_folder(self):
+
         for filename in os.listdir(self.path):
             if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp')):
                 filepath = os.path.join(self.path, filename)
@@ -56,7 +63,7 @@ class Split:
                 return
             for i in range(9):
                 # Calculate the coordinates of the crop box for the current square
-                print(self.count)
+
                 left = i * square_size
                 upper = j * square_size
                 right = left + square_size
@@ -70,10 +77,10 @@ class Split:
                 cropped_img.save(filepath)
                 self.count+=1
 
-        #cropEvery = Crop_every_image(self.output_folder)
+        cropEvery = Crop_every_image(self.output_folder)
 
 
 
 
 
-Elram = Split('filled_in_templates/aviatar/after_preprocessing')
+

@@ -1,20 +1,25 @@
 import os
 import cv2
+from split_image import  Split
 
 class preprocess:
     def __init__(self):
 
         self.input_folder = "filled_in_templates"
         self.result_folder_name = 'after_preprocessing'
+        self.new_folder_path = ""
         self.prepare_pict()
+
 
 
     def prepare_pict (self):
         for folder_path, subfolders, filenames in os.walk(self.input_folder):
-            new_folder_path = os.path.join(folder_path, self.result_folder_name)
-            os.makedirs(new_folder_path, exist_ok=True)
+
             count = 0
             for filename in filenames:
+                self.new_folder_path = os.path.join(folder_path, self.result_folder_name)
+                if not os.path.exists(self.new_folder_path):
+                    os.makedirs(self.new_folder_path)
 
                 if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp')):
 
@@ -44,9 +49,19 @@ class preprocess:
                     output_filename = str(count) + ".jpg"
                     count+=1
                     output_path = os.path.join(
-                        new_folder_path, output_filename)
-                    print(output_path)
+                        self.new_folder_path, output_filename)
                     cv2.imwrite(output_path, binarized)
 
 
-aviatar = preprocess();
+            # print(self.new_folder_path)
+
+            # print(new_folder_path)
+        split = Split(self.new_folder_path)
+
+
+
+
+
+
+
+guy = preprocess();
