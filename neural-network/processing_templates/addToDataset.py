@@ -1,6 +1,7 @@
 import os
 import uuid
 import shutil
+from split_image import Split
 class addToDataset:
     def __init__(self):
         self.input_dir = "filled_in_templates/result"
@@ -9,6 +10,7 @@ class addToDataset:
 
 
         self.add()
+        self.delete_folder(self.input_dir)
 
 
     def add (self):
@@ -110,5 +112,20 @@ class addToDataset:
                 dst_dir = f"{self.output}/{binary_dir}"
                 shutil.move(new_path, dst_dir)
 
-ad = addToDataset()
+
+
+
+
+    def delete_folder (self, path):
+        try:
+            # remove the folder and all its contents
+            shutil.rmtree(path)
+            print("Folder deleted successfully")
+        except OSError as error:
+            print(f"Error: {path} : {error.strerror}")
+
+
+
+add = addToDataset()
+
 

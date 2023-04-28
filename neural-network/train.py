@@ -63,4 +63,4 @@ model.summary()
 print("\nEvaluate on validation data:")
 model.evaluate(ds_validation, verbose=2)
 
-model.save("neural-network/saved_model")
+model.save("saved_model")

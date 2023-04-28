@@ -15,6 +15,8 @@ class preprocess:
     def prepare_pict (self):
         for folder_path, subfolders, filenames in os.walk(self.input_folder):
 
+
+
             count = 0
             for filename in filenames:
                 self.new_folder_path = os.path.join(folder_path, self.result_folder_name)
@@ -39,7 +41,7 @@ class preprocess:
 
                     height, width = binarized.shape
                     binarized = binarized[int(
-                        height - height * 0.98):int(0.98 * height), int(width - width*0.99):int(width * 0.94)]
+                        height - height * 0.96):int(0.99 * height), int(width - width*0.99):int(width * 0.94)]
 
                     # cv2.namedWindow('preview', cv2.WINDOW_KEEPRATIO)
                     # cv2.resizeWindow('preview', 500, 1000)
