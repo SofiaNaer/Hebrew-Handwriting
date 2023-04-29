@@ -50,8 +50,6 @@ ds_validation = tf.keras.preprocessing.image_dataset_from_directory(
     subset="validation",
 )
 
-print(ds_train.class_names)
-
 model.compile(
     optimizer=keras.optimizers.Adam(),
     loss=[keras.losses.SparseCategoricalCrossentropy()],
@@ -65,4 +63,4 @@ model.summary()
 print("\nEvaluate on validation data:")
 model.evaluate(ds_validation, verbose=2)
 
-model.save("neural-network/saved_model")
+model.save("saved_model")
