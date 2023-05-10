@@ -13,6 +13,7 @@ batch_size = 32
 model = keras.Sequential(
     [
         layers.Input((28, 28, 1), name='image'),
+        layers.RandomRotation(factor=0.05, fill_mode='reflect', interpolation='bilinear'),
         layers.Conv2D(32, 3, padding="same", activation='relu', name='conv1'),
         layers.MaxPooling2D(pool_size=(2, 2)),
         layers.Conv2D(64, 3, padding="same", activation='relu', name='conv2'),

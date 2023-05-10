@@ -4,6 +4,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 import numpy as np
+from autocorrect import Speller
 
 
 alphabet_dict = {0: 'א', 1: 'ב', 2: 'ג', 3: 'ד', 4: 'ה', 5: 'ו', 6: 'ז', 7: 'ח', 8: 'ט',
@@ -12,7 +13,7 @@ img_height = 28
 img_width = 28
 
 # load model
-model = keras.models.load_model("neural-network/saved_model")
+model = keras.models.load_model("../neural-network/saved_model")
 
 
 def predict_letter(img_path, index):
@@ -146,3 +147,7 @@ result = result[::-1]
 print("result: " + result)
 print("average confidence level: " + str(round(total_value/i, 5)))
 cv2.destroyAllWindows()
+
+Spell = Speller('he')
+check_spell = Spell(result)
+print(check_spell)
