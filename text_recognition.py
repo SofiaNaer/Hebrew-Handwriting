@@ -6,31 +6,52 @@ from tensorflow import keras
 import numpy as np
 from autocorrect import Speller
 
+
 class text_recognition:
     def __init__(self, img):
         self.img = img
         self.model = keras.models.load_model("../neural-network/saved_model")
 
     # apply all image processing on 'img'
-    def preprocess (self):
+    def preprocess(self):
+        # convert to to grayscale
+        gray = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
+
+        # apply bilateral filter to remove noise while preserving edges
+        blur = cv2.bilateralFilter(gray, 9, 75, 75)
+
+        # threshold image to create a binary image
+        _, thresh = cv2.threshold(
+            blur, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+
+        # remove noise by opening (erosion followed by dilation)
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+        opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
+
+        # apply dilation
+        dilation = cv2.dilate(opening, kernel, iterations=2)
+
+        self.img = dilation
+        self.check_image(dilation, "afterwards")
+
+    @staticmethod
+    def check_image(img, text):
+        cv2.namedWindow(text, cv2.WINDOW_KEEPRATIO)
+        cv2.imshow("sentence after pre-processing", img)
+        cv2.resizeWindow('sentence after pre-processing', 1280, 720)
+        cv2.waitKey(0)
 
     # returns image of one sentence
-    def split_lines(self, img ):
+    def split_lines(self, img):
+        pass
 
     # returns squares of letters or spaces
-    def split_squares (self, line):
+    def split_squares(self, line):
+        pass
 
     # apply model and returns string
-    def predict_Letter(self):
-
-
-
-
-
-
-
-
-
+    def predict_letter(self):
+        pass
 
 # 0. main
 
@@ -46,8 +67,3 @@ class text_recognition:
 # 4. to each square: apply model
 
 # 5. apply spell checking
-
-
-
-
-
