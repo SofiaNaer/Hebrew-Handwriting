@@ -58,7 +58,7 @@ model.compile(
 )
 
 print("\nFit model on training data:")
-model.fit(ds_train, epochs=40, verbose=2, validation_data=ds_validation)
+model.fit(ds_train, epochs=30, verbose=2, validation_data=ds_validation)
 model.summary()
 
 print("\nEvaluate on validation data:")

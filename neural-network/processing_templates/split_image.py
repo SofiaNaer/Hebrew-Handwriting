@@ -62,7 +62,7 @@ class Split:
                 image = Image.open(filepath)
                 self.split_page(image)
 
-       # self.delete_folder(self.parent_path)
+        self.delete_folder(self.parent_path)
 
 
     def split_page(self, img):
@@ -70,7 +70,8 @@ class Split:
         square_size = min(width, height) // 9
         # Crop the image into 117 squares
         for j in range(13):
-            if self.count >= 243:
+            if self.count >= 324\
+                    :
                 return
             for i in range(9):
                 # Calculate the coordinates of the crop box for the current square
@@ -89,7 +90,7 @@ class Split:
                 self.count+=1
 
 
-       # cropEvery = Crop_every_image(self.output_folder)
+        cropEvery = Crop_every_image(self.output_folder)
         
     def delete_folder (self, path):
         try:
