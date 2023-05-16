@@ -1,4 +1,5 @@
 import os
+from fileinput import filename
 import cv2
 import numpy as np
 import tensorflow as tf
@@ -13,25 +14,37 @@ class text_recognition:
         self.model = keras.models.load_model("./neural-network/saved_model")
         self.preprocess()
         self.split_lines(self.img)
+        self.convert_lines_to_letters("./lines")
+        self.result = self.convert_letters_to_string("./Squares")
+        print(self.spell_check())
+
 
     # apply all image processing on 'img'
     def preprocess(self):
         # convert to to grayscale
         gray = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
 
+        # self.check_image(gray,"test")
+
         # apply bilateral filter to remove noise while preserving edges
         blur = cv2.bilateralFilter(gray, 9, 75, 75)
+
+        # self.check_image(blur,"test")
 
         # threshold image to create a binary image
         _, thresh = cv2.threshold(
             blur, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
 
+        # self.check_image(thresh,"test")
+
         # remove noise by opening (erosion followed by dilation)
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-        opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
+        # opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
+
+        # self.check_image(thresh,"test")
 
         # apply dilation
-        dilation = cv2.dilate(opening, kernel, iterations=2)
+        # dilation = cv2.dilate(thresh, kernel, iterations=1)
 
         self.img = dilation
         self.check_image(dilation, "afterwards")
@@ -39,25 +52,73 @@ class text_recognition:
     @staticmethod
     def check_image(img, text):
         cv2.namedWindow(text, cv2.WINDOW_KEEPRATIO)
-        cv2.imshow("sentence after pre-processing", img)
-        cv2.resizeWindow('sentence after pre-processing', 1280, 720)
+        cv2.imshow(text, img)
+        cv2.resizeWindow(text, 1280, 720)
         cv2.waitKey(0)
 
+
+    # create letter squares in a folder named "Squares"
+    def convert_lines_to_letters (self, lines_folder):
+        for filename in os.listdir(lines_folder):
+            if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp')):
+                filepath = os.path.join(lines_folder, filename)
+                image = cv2.imread(filepath)
+
+                # Create a horizontal kernel to detect horizontal lines
+                horizontal_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (image.shape[1] // 10, 3))
+
+                # Apply morphological operations to detect and remove horizontal lines
+                detected_lines = cv2.morphologyEx(image, cv2.MORPH_OPEN, horizontal_kernel, iterations=2)
+                without_lines = cv2.bitwise_xor(image, detected_lines)
+
+                self.check_image(without_lines, "without lines")
+
+                kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+                without_lines = cv2.dilate(without_lines, kernel, iterations=1)
+
+                self.check_image(without_lines, "without lines")
+                cv2.imwrite(filepath, without_lines)
+
+                self.split_squares(filepath)
+
+
+    def convert_letters_to_string(self, letters_folder):
+        result = ""
+
+        for filename in os.listdir(letters_folder):
+            if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp')):
+
+                if "space" in filename:
+                    result += " "
+                else:
+                    filepath = os.path.join(letters_folder, filename)
+                    character, value = self.predict_letter(filepath)
+
+        print(result)
+        return result
+
+    # TODO: make sure the lines are numbered correctly - top to bottom
     # returns image of one sentence
     def split_lines(self, img):
-        x, w1 = img.shape
+        h1, w1 = img.shape
         if not os.path.exists("lines"):
             os.makedirs("lines")
         line_images = []
         contours, _ = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        for contour in contours:
+
+        for i in range(len(contours)-1, -1, -1):
+            contour = contours[i]
             x, y, w, h = cv2.boundingRect(contour)
             line_img = img[y:y + h, x:x + w]
             line_images.append(line_img)
-        for i, line_img in enumerate(line_images):
-            _, w = line_img.shape
-            if w > w1 * 0.5:
-                cv2.imwrite(f'lines\line_{i}.jpg', line_img)
+
+        for i in range(len(line_images)):
+            h, w = line_images[i].shape
+
+            if w > w1 * 0.5 and h > h1 * 0.05:
+                bin_i = bin(i)
+                cv2.imwrite(f'lines\\{bin_i}.jpg', line_images[i])
+
 
             # new_image = f'lines\line_{i}.jpg'
             # width1, height1 = new_image.size
@@ -66,12 +127,18 @@ class text_recognition:
 
     # returns squares of letters or spaces
     def split_squares(self, line):
+
         output_folder = "Squares"
         space_threshold = 15  # Set the threshold distance to differentiate between letters and spaces (pixels)
         os.makedirs(output_folder, exist_ok=True)
+        image = cv2.imread(line)
+
+
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        # image = image.astype(np.uint8)
 
         # Identify text regions using contour detection and sort the contours from left to right
-        contours, _ = cv2.findContours(line, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         contours = sorted(contours, key=lambda c: cv2.boundingRect(c)[0])
 
         for i, contour in contours:
@@ -114,6 +181,11 @@ class text_recognition:
 
         return [alphabet_dict[class_index], prediction_value]
 
+    def spell_check (self):
+        Spell = Speller('he')
+        return Spell(self.result)
+
+
 
 # 0. main
 
@@ -130,4 +202,5 @@ class text_recognition:
 
 # 5. apply spell checking
 
-text_rec = text_recognition("sentences/sentence3.jpg")
+text_rec = text_recognition("./prototype/sentences/sentence5.jpg")
+
