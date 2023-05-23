@@ -38,7 +38,7 @@ class text_recognition:
         # self.check_image(thresh,"test")
 
         # remove noise by opening (erosion followed by dilation)
-        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+        #kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
         # opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
 
         # self.check_image(thresh,"test")
@@ -46,8 +46,8 @@ class text_recognition:
         # apply dilation
         # dilation = cv2.dilate(thresh, kernel, iterations=1)
 
-        self.img = dilation
-        self.check_image(dilation, "afterwards")
+        self.img = thresh
+        self.check_image(thresh, "afterwards")
 
     @staticmethod
     def check_image(img, text):
@@ -63,21 +63,24 @@ class text_recognition:
             if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp')):
                 filepath = os.path.join(lines_folder, filename)
                 image = cv2.imread(filepath)
+               #
+               #  # Create a horizontal kernel to detect horizontal lines
+               #  horizontal_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (image.shape[1] // 10, 3))
+               #
+               #  # Apply morphological operations to detect and remove horizontal lines
+               #  detected_lines = cv2.morphologyEx(image, cv2.MORPH_OPEN, horizontal_kernel, iterations=2)
+               #  without_lines = cv2.bitwise_xor(image, detected_lines)
+               #
+               # # self.check_image(without_lines, "without lines")
+               #
+               #  kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+               #  without_lines = cv2.dilate(without_lines, kernel, iterations=1)
+               #
+               #  self.check_image(without_lines, "without lines")
 
-                # Create a horizontal kernel to detect horizontal lines
-                horizontal_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (image.shape[1] // 10, 3))
+                image = self.crop_bottom_line(image)
 
-                # Apply morphological operations to detect and remove horizontal lines
-                detected_lines = cv2.morphologyEx(image, cv2.MORPH_OPEN, horizontal_kernel, iterations=2)
-                without_lines = cv2.bitwise_xor(image, detected_lines)
-
-                self.check_image(without_lines, "without lines")
-
-                kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-                without_lines = cv2.dilate(without_lines, kernel, iterations=1)
-
-                self.check_image(without_lines, "without lines")
-                cv2.imwrite(filepath, without_lines)
+                cv2.imwrite(filepath, image)
 
                 self.split_squares(filepath)
 
@@ -117,6 +120,7 @@ class text_recognition:
 
             if w > w1 * 0.5 and h > h1 * 0.05:
                 bin_i = bin(i)
+
                 cv2.imwrite(f'lines\\{bin_i}.jpg', line_images[i])
 
 
@@ -141,9 +145,9 @@ class text_recognition:
         contours, _ = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         contours = sorted(contours, key=lambda c: cv2.boundingRect(c)[0])
 
-        for i, contour in contours:
-            x, y, w, h = cv2.boundingRect(contour)
-            letter_image = line[y:y + h, x:x + w]
+        for i in range (len(contours)):
+            x, y, w, h = cv2.boundingRect(contours[i])
+            letter_image = image[y:y + h, x:x + w]
 
             # Check the distance between the current contour and the next contour
             if i < len(contours) - 1:
@@ -170,9 +174,9 @@ class text_recognition:
         img_width = 28
 
         # process the letter box: resize and convert to array
-        image = tf.keras.preprocessing.image.load_img(letter_path, target_size=(img_height, img_width))
+        image = tf.keras.preprocessing.image.load_img(letter_path, grayscale='true', target_size=(img_height, img_width))
         input_arr = tf.keras.preprocessing.image.img_to_array(image)
-        # input_arr = np.array([input_arr])
+        input_arr = np.array([input_arr])
 
         # perform OCR
         predictions = self.model.predict(input_arr)
@@ -184,6 +188,20 @@ class text_recognition:
     def spell_check (self):
         Spell = Speller('he')
         return Spell(self.result)
+
+
+    def crop_bottom_line(self, img):
+
+        # Get the image dimensions
+        height, width = img.shape[:2]
+
+        # Calculate the number of pixels to be cropped from the bottom
+        crop_pixels = int(height * 0.2)
+
+        # Crop the image
+        return img[:height - crop_pixels, :]
+
+
 
 
 
@@ -202,5 +220,5 @@ class text_recognition:
 
 # 5. apply spell checking
 
-text_rec = text_recognition("./prototype/sentences/sentence5.jpg")
+text_rec = text_recognition("sentences/sentence5.jpg")
 
