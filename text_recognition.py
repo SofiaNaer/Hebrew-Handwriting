@@ -1,4 +1,5 @@
 import os
+import shutil
 from fileinput import filename
 import cv2
 import numpy as np
@@ -8,6 +9,8 @@ import numpy as np
 from autocorrect import Speller
 from PIL import Image
 from PIL import ImageEnhance
+from Split_letters import Split_letters
+
 
 class text_recognition:
     def __init__(self, img_path):
@@ -154,7 +157,9 @@ class text_recognition:
         for filename in os.listdir(lines_folder):
             if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp')):
                 filepath = os.path.join(lines_folder, filename)
-                self.split_squares(filepath)
+                split_l = Split_letters(filepath)
+                self.result += self.send_to_OCR("Squares") + '\n'
+                self.delete_folder("Squares")
 
     def send_to_OCR(self, letters_folder):
         result = ""
@@ -234,6 +239,14 @@ class text_recognition:
         cv2.imshow(text, img)
         cv2.resizeWindow(text, 1280, 200)
         cv2.waitKey(0)
+
+    def delete_folder(self, path):
+        try:
+            # remove the folder and all its contents
+            shutil.rmtree(path)
+            print("Folder deleted successfully")
+        except OSError as error:
+            print(f"Error: {path} : {error.strerror}")
 
 
 text_rec = text_recognition("sentences/sentence5.jpg")
