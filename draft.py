@@ -57,7 +57,7 @@ def split_squares( line_path):
     image = cv2.imread('handwriting_image.jpg', 0)  # Convert to grayscale
     check_image(src_image, "with boxes")
 
-split_squares("lines/0b10.jpg")
+
 
 
 # sum all distances
@@ -74,3 +74,31 @@ split_squares("lines/0b10.jpg")
 #   2.1 erosion
 #   2.2 findContours
 #   2.3 return boxes
+
+def find_threshold (img_path):
+    space_threshold = 110
+    src_image = cv2.imread(img_path)
+    src_image = cv2.cvtColor(src_image, cv2.COLOR_BGR2GRAY)
+    contours, _ = cv2.findContours(src_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours = sorted(contours, key=lambda c: cv2.boundingRect(c)[0], reverse=True)
+    squares_amount = 0
+    total_distance = 0
+    for i in range(len(contours)):
+        x, y, w, h = cv2.boundingRect(contours[i])
+        if w < 20 or h < 20 or w // h > 4 or w / h < 0.1:
+            continue
+        if i < len(contours) - 1:
+            next_x, _, _, _ = cv2.boundingRect(contours[i + 1])
+            distance = (x + w) - next_x
+            total_distance += distance
+            squares_amount+=1
+    print(total_distance)
+    print(squares_amount)
+
+    threshold = (total_distance/squares_amount) * 1.3
+    print(threshold)
+    return threshold
+
+
+find_threshold("lines/0b10.jpg")
+
