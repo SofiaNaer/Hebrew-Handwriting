@@ -7,13 +7,6 @@ class Split_letters:
         self.threshold = self.find_threshold(line_path)
         self.split_squares(line_path)
 
-    def is_background(self, image):
-        # Calculate the percentage of black pixels
-        black_pixels = np.sum(image == 0)
-        total_pixels = image.shape[0] * image.shape[1]
-        black_percentage = (black_pixels / total_pixels) * 100
-
-        return black_percentage > 80
 
 
     def process_big_box(self, image, index):
@@ -72,10 +65,14 @@ class Split_letters:
         j = 0
         for i in range(len(contours)):
             x, y, w, h = cv2.boundingRect(contours[i])
-            j += 1
             # Check if contour is too small or too wide, it might be noise
             if w < 20 or h < 20 or w // h > 4 or w / h < 0.1:
                 continue
+            filtered_contours.append(contours[i])
+
+        for i in range(len(filtered_contours)):
+            x, y, w, h = cv2.boundingRect(contours[i])
+            j += 1
 
             letter_image = src_image[y:y + h, x:x + w]
             x1 = x
@@ -86,30 +83,35 @@ class Split_letters:
             # cv2.rectangle(src_image, (x1, y1), (x2, y2), (255, 255, 255), 2)
 
             # Check the distance between the current contour and the next contour
-            if i < len(contours) - 1:
+            if i < len(filtered_contours) - 1:
 
-                next_x, _, next_w, _ = cv2.boundingRect(contours[i + 1])
-                distance = x - next_x
+                next_x, _, next_w, _ = cv2.boundingRect(filtered_contours[i+1])
+                print(x, "current x")
+                print(w, "current w")
+                print(next_x, "next x")
+                print(next_w, "next w")
+
+                distance = x - next_x - next_w
+                #letter_width = self.threshold * 1.2
 
                 print(distance)
 
 
                 if distance > space_threshold:
-                        print("it's a space")
-                        space_image = np.ones_like(letter_image) * 255
-                        output_path = os.path.join(output_folder, f"letter_{j}_space.jpg")
-                        cv2.imwrite(output_path, space_image)
-
-                if w > space_threshold:
-
-                    j = self.process_big_box(letter_image, j)
+                    flag = True
+                    print(w, "width")
+                    print("it's a space")
+                    space_image = np.ones_like(letter_image) * 255
+                    output_path = os.path.join(output_folder, f"letter_{j}_space.jpg")
+                    cv2.imwrite(output_path, space_image)
 
                     continue
 
             # Save the letter
-                print("normal letter")
-                output_path = os.path.join(output_folder, f"letter_{j}.jpg")
-                cv2.imwrite(output_path, letter_image)
+                if not flag:
+                    output_path = os.path.join(output_folder, f"letter_{j}.jpg")
+                    print("it's normal")
+                    cv2.imwrite(output_path, letter_image)
 
         self.check_image(src_image, "with boxes")
 
@@ -143,14 +145,15 @@ class Split_letters:
                 continue
             if i < len(contours) - 1:
                 next_x, _, next_w, _ = cv2.boundingRect(contours[i + 1])
-                distance = x - next_x + w
+                distance = x - next_x
 
                 # distance = w + (next_x
+
                 total_distance += distance
                 squares_amount += 1
 
-        threshold = (total_distance / (squares_amount +2))
-        print(int(threshold))
+        threshold = (total_distance / (squares_amount))
+        print(int(threshold) , "it's threshold")
         #avarage_letter_width = (total_distance - threshold * (squares_amount/4))/squares_amount
         return int(threshold)
 
