@@ -10,6 +10,7 @@ from autocorrect import Speller
 from PIL import Image
 from PIL import ImageEnhance
 from Split_letters import Split_letters
+import random
 
 
 class text_recognition:
@@ -71,7 +72,7 @@ class text_recognition:
             os.makedirs("lines")
         line_images = []
         contours, _ = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
+        j = 1
         for i in range(len(contours) - 1, -1, -1):
             contour = contours[i]
             x, y, w, h = cv2.boundingRect(contour)
@@ -82,11 +83,12 @@ class text_recognition:
             h, w, _ = line_images[i].shape
 
             if w > w1 * 0.5 and h > h1 * 0.05:
-                bin_i = bin(i)
+                #bin_i = bin(i)
                 # without_line = self.remove_bottom_line(line_images[i])
 
-                cv2.imwrite(f'lines\\{bin_i}.jpg', line_images[i] )
-                self.brighten_image(f'lines\\{bin_i}.jpg', 3)
+                cv2.imwrite(f'lines\\{j}.jpg', line_images[i] )
+                self.brighten_image(f'lines\\{j}.jpg', 3)
+                j += 1
 
 
         # returns squares of letters or spaces
@@ -158,8 +160,10 @@ class text_recognition:
             if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp')):
                 filepath = os.path.join(lines_folder, filename)
                 split_l = Split_letters(filepath)
+                print(filepath)
                 self.result += self.send_to_OCR("Squares") + '\n'
-                self.delete_folder("Squares")
+                #self.delete_folder("Squares")
+                self.move_folder("Squares")
 
     def send_to_OCR(self, letters_folder):
         result = ""
@@ -247,6 +251,15 @@ class text_recognition:
             print("Folder deleted successfully")
         except OSError as error:
             print(f"Error: {path} : {error.strerror}")
+
+    def move_folder(self, source):
+        random_number = random.randint(1, 1000)
+        new_name = f"{random_number}"
+
+        # Rename the folder
+        os.rename(source, new_name)
+
+
 
 
 text_rec = text_recognition("sentences/sentence5.jpg")

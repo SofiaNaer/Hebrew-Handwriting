@@ -4,7 +4,7 @@ import os
 
 class Split_letters:
     def __init__(self, line_path):
-        self.threshold = self.find_threshold(line_path)
+
         self.split_squares(line_path)
 
 
@@ -52,7 +52,7 @@ class Split_letters:
 
     def split_squares(self, line_path):
         output_folder = "Squares"
-        space_threshold = self.find_threshold(line_path)  # Set the threshold distance to differentiate between letters and spaces (pixels)
+          # Set the threshold distance to differentiate between letters and spaces (pixels)
         os.makedirs(output_folder, exist_ok=True)
         src_image = cv2.imread(line_path)
 
@@ -69,6 +69,9 @@ class Split_letters:
             if w < 20 or h < 20 or w // h > 4 or w / h < 0.1:
                 continue
             filtered_contours.append(contours[i])
+
+        space_threshold, avg_width = self.find_threshold(filtered_contours)
+        print (avg_width, "avg_width")
 
         for i in range(len(filtered_contours)):
             x, y, w, h = cv2.boundingRect(contours[i])
@@ -91,14 +94,15 @@ class Split_letters:
                 print(next_x, "next x")
                 print(next_w, "next w")
 
+
                 distance = x - next_x - next_w
-                #letter_width = self.threshold * 1.2
+               # letter_width = self.threshold * 1.2
 
                 print(distance)
 
 
-                if distance > space_threshold:
-                    flag = True
+                if distance > space_threshold - 5:
+                    #flag = True
                     print(w, "width")
                     print("it's a space")
                     space_image = np.ones_like(letter_image) * 255
@@ -130,12 +134,8 @@ class Split_letters:
     #   2.2 findContours
     #   2.3 return boxes
 
-    def find_threshold(self, img_path):
-        space_threshold = 110
-        src_image = cv2.imread(img_path)
-        src_image = cv2.cvtColor(src_image, cv2.COLOR_BGR2GRAY)
-        contours, _ = cv2.findContours(src_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        contours = sorted(contours, key=lambda c: cv2.boundingRect(c)[0], reverse=True)
+    def find_threshold(self, contours):
+
         squares_amount = 0
         total_distance = 0
 
@@ -152,9 +152,13 @@ class Split_letters:
                 total_distance += distance
                 squares_amount += 1
 
-        threshold = (total_distance / (squares_amount))
-        print(int(threshold) , "it's threshold")
+                total_w += w
+
+
+
+        threshold = (total_distance  / (squares_amount + 1))
+        print(int(threshold), "it's threshold")
         #avarage_letter_width = (total_distance - threshold * (squares_amount/4))/squares_amount
-        return int(threshold)
+        return int(threshold), total_w//squares_amount
 
 
