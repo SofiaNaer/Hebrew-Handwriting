@@ -15,15 +15,15 @@ import random
 
 class text_recognition:
     def __init__(self, img_path):
+        self.result = ""
         self.img = cv2.imread(img_path)
         print("original image:", type(self.img))
         self.model = keras.models.load_model("./neural-network/saved_model")
         self.black_and_white= self.preprocess1()
         self.split_lines(self.black_and_white)
-
         self.convert_lines_to_letters("./lines")
-        # self.result = self.send_to_OCR("./Squares")
-        # print(self.spell_check())
+        print('result:\n', self.result)
+        #print(self.spell_check())
 
         # apply all image processing on 'img'
     def preprocess1(self):
@@ -61,9 +61,10 @@ class text_recognition:
         # opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
 
         # apply dilation
-        dilation = cv2.dilate(thresh, kernel, iterations=1)
+        dilation = cv2.dilate(thresh, kernel, iterations=2)
         self.check_image(dilation, "afterwards")
         return dilation
+
     # returns image of one sentence
     def split_lines(self, img):
         print("split_lines image",type(img))
@@ -87,7 +88,7 @@ class text_recognition:
                 # without_line = self.remove_bottom_line(line_images[i])
 
                 cv2.imwrite(f'lines\\{j}.jpg', line_images[i] )
-                self.brighten_image(f'lines\\{j}.jpg', 3)
+                self.brighten_image(f'lines\\{j}.jpg', 2)
                 j += 1
 
 
@@ -105,53 +106,7 @@ class text_recognition:
         bw_sentence = self.preprocess(brightened_image_array)
         cv2.imwrite(image_path, bw_sentence)
 
-    def split_squares(self, line_path):
 
-        output_folder = "Squares"
-        space_threshold = 100  # Set the threshold distance to differentiate between letters and spaces (pixels)
-        os.makedirs(output_folder, exist_ok=True)
-        src_image = cv2.imread(line_path)
-
-        src_image = cv2.cvtColor(src_image, cv2.COLOR_BGR2GRAY)
-        # image = image.astype(np.uint8)
-
-        # Identify text regions using contour detection and sort the contours from left to right
-        contours, _ = cv2.findContours(src_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        contours = sorted(contours, key=lambda c: cv2.boundingRect(c)[0])
-
-        for i in range(len(contours)):
-            x, y, w, h = cv2.boundingRect(contours[i])
-
-            # Check if contour is too small or too wide, it might be noise
-            if w < 20 or h < 20 or w // h > 4 or w / h < 0.1:
-                continue
-
-            letter_image = src_image[y:y + h, x:x + w]
-            x1 = x
-            x2 = x + w
-            y1 = y
-            y2 = y + h
-
-            cv2.rectangle(src_image, (x1, y1), (x2, y2), (255, 255, 255), 2)
-
-
-            # Check the distance between the current contour and the next contour
-            if i < len(contours) - 1:
-                next_x, _, _, _ = cv2.boundingRect(contours[i + 1])
-                distance = (x + w) - next_x
-                print(distance)
-
-                if distance > space_threshold:  # create a blank space image
-                    space_image = np.ones_like(letter_image) * 255
-                    output_path = os.path.join(output_folder, f"space_{i}.jpg")
-                    cv2.imwrite(output_path, space_image)
-                    continue
-
-            # Save the letter
-            output_path = os.path.join(output_folder, f"letter_{x}.jpg")
-            cv2.imwrite(output_path, letter_image)
-
-        self.check_image(src_image, "with boxes")
 
 
     # create letter squares in a folder named "Squares"
@@ -167,16 +122,16 @@ class text_recognition:
 
     def send_to_OCR(self, letters_folder):
         result = ""
+        sorted_images = self.sort_numerically(letters_folder)
+        print(sorted_images)
 
-        for filename in os.listdir(letters_folder):
-            if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp')):
-
-                if "space" in filename:
-                    result += " "
-                else:
-                    filepath = os.path.join(letters_folder, filename)
-                    character, value = self.predict_letter(filepath)
-                    result += character
+        for filename in sorted_images:
+            if "space" in filename:
+                result += " "
+            else:
+                filepath = os.path.join(letters_folder, filename)
+                character, value = self.predict_letter(filepath)
+                result += character
 
         print(result)
         return result
@@ -258,7 +213,6 @@ class text_recognition:
 
         # Rename the folder
         os.rename(source, new_name)
-
 
 
 
