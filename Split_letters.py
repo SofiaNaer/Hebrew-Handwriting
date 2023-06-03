@@ -10,37 +10,15 @@ class Split_letters:
 
 
     def process_big_box(self, image, index):
-        # # Convert image to grayscale
-        # gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        #
-        # # Thresholding
-        # _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+        height, width = image.shape
+        mid_point = width//2
 
-        # check_image(image, "before")
+        first = image[:, mid_point:width]
+        second = image[:, 0:mid_point]
 
-        # Erosion
-        min_contour_area = 50
-        kernel = np.ones((5, 2), np.uint8)
-        dilated = cv2.dilate(image, kernel, iterations=2)
-        kernel2 = np.ones((2, 6), np.uint8)
-        eroded = cv2.erode(dilated, kernel2, iterations=2)
-        self.check_image(eroded, "dilated")
+        cv2.imwrite(f'./Squares/{index}.jpg', first)
+        cv2.imwrite(f'./Squares/{index + 1}.jpg', second)
 
-        # Find contours
-        contours, _ = cv2.findContours(eroded, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-        # Filter out noise and draw contours
-        for contour in contours:
-            if cv2.contourArea(contour) > min_contour_area:
-                x, y, w, h = cv2.boundingRect(contour)
-                cv2.rectangle(image, (x, y), (x + w, y + h), (255, 255, 255), 2)
-                sub_letter = eroded[y:y + h, x:x + w]
-                cv2.imwrite(f'./Squares/letter_{index}.jpg', sub_letter)
-                index += 1
-
-        self.check_image(image, 'Result')
-
-        return index
 
 
     def check_image(self, img, text):
@@ -62,6 +40,7 @@ class Split_letters:
         # Identify text regions using contour detection and sort the contours from left to right
         contours, _ = cv2.findContours(src_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         contours = sorted(contours, key=lambda c: cv2.boundingRect(c)[0], reverse=True)
+        filtered_contours = []
         j = 0
         for i in range(len(contours)):
             x, y, w, h = cv2.boundingRect(contours[i])
@@ -73,21 +52,34 @@ class Split_letters:
         space_threshold, avg_width = self.find_threshold(filtered_contours)
         print (avg_width, "avg_width")
 
+        flag = False
         for i in range(len(filtered_contours)):
-            x, y, w, h = cv2.boundingRect(contours[i])
+            print('\n')
+            print(len(filtered_contours))
+            x, y, w, h = cv2.boundingRect(filtered_contours[i])
             j += 1
-
+            flag = False
             letter_image = src_image[y:y + h, x:x + w]
             x1 = x
             x2 = x + w
             y1 = y
             y2 = y + h
 
+            if i == len(filtered_contours) - 1:
+                if w > avg_width*1.4:
+                    flag = True
+                    self.process_big_box(letter_image, j)
+                    j += 1
+                else:
+                    output_path = os.path.join(output_folder, f"{j}.jpg")
+                    print("it's normal")
+                    cv2.imwrite(output_path, letter_image)
+
+
             # cv2.rectangle(src_image, (x1, y1), (x2, y2), (255, 255, 255), 2)
 
             # Check the distance between the current contour and the next contour
             if i < len(filtered_contours) - 1:
-
                 next_x, _, next_w, _ = cv2.boundingRect(filtered_contours[i+1])
                 print(x, "current x")
                 print(w, "current w")
@@ -96,48 +88,48 @@ class Split_letters:
 
 
                 distance = x - next_x - next_w
+                if w < avg_width * 0.3:
+                    distance = distance - w
+
+                print("distance", distance)
+
+                if distance < -50:
+                    continue
                # letter_width = self.threshold * 1.2
 
                 print(distance)
 
+                if w > avg_width*1.4:
+                    flag = True
+                    self.process_big_box(letter_image, j)
+                    j += 1
 
-                if distance > space_threshold - 5:
-                    #flag = True
+
+                if distance > space_threshold - 8:
                     print(w, "width")
                     print("it's a space")
                     space_image = np.ones_like(letter_image) * 255
-                    output_path = os.path.join(output_folder, f"letter_{j}_space.jpg")
+                    output_path = os.path.join(output_folder, f"{j}_space.jpg")
                     cv2.imwrite(output_path, space_image)
 
-                    continue
+
 
             # Save the letter
                 if not flag:
-                    output_path = os.path.join(output_folder, f"letter_{j}.jpg")
+                    output_path = os.path.join(output_folder, f"{j}.jpg")
                     print("it's normal")
                     cv2.imwrite(output_path, letter_image)
 
+
         self.check_image(src_image, "with boxes")
 
-    # sum all distances
-    # sum amount of distances
-    # calculate sum all distances/sum amount of distances = avarage_with_spaces
-    # mul average_with_spaces by 1.3 = average_space_width
-    # calculate words_amount = amount of distances/4
-    # average_space_width * words_amount = all_spaces
-    # all distances - all_spaces = total_width_without_spaces
 
-    # check two things:
-    # 1. space - 85% background
-    # 2. otherwise - 2 or more letters:
-    #   2.1 erosion
-    #   2.2 findContours
-    #   2.3 return boxes
 
     def find_threshold(self, contours):
 
         squares_amount = 0
         total_distance = 0
+        total_w = 0
 
         for i in range(len(contours)):
             x, y, w, h = cv2.boundingRect(contours[i])
@@ -147,18 +139,25 @@ class Split_letters:
                 next_x, _, next_w, _ = cv2.boundingRect(contours[i + 1])
                 distance = x - next_x
 
+                if distance < -50:
+                    continue
                 # distance = w + (next_x
 
                 total_distance += distance
                 squares_amount += 1
 
                 total_w += w
+                avg_letter = total_w//squares_amount
 
+        if avg_letter < 90:
+            avg_letter = 90
 
-
-        threshold = (total_distance  / (squares_amount + 1))
+        threshold = (total_distance / (squares_amount +1))
+        if threshold < 90:
+            threshold = 90
         print(int(threshold), "it's threshold")
-        #avarage_letter_width = (total_distance - threshold * (squares_amount/4))/squares_amount
-        return int(threshold), total_w//squares_amount
+        print(int(avg_letter), "it's avg_letter")
+
+        return int(threshold), int(avg_letter)
 
 

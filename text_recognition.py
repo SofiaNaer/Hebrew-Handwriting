@@ -9,29 +9,35 @@ import numpy as np
 from autocorrect import Speller
 from PIL import Image
 from PIL import ImageEnhance
+
+import String_repair
 from Split_letters import Split_letters
 import random
+import re
 
 
 class text_recognition:
     def __init__(self, img_path):
+        self.result = ""
         self.img = cv2.imread(img_path)
-        print("original image:", type(self.img))
         self.model = keras.models.load_model("./neural-network/saved_model")
-        self.black_and_white= self.preprocess1()
+        self.black_and_white = self.preprocess1()
         self.split_lines(self.black_and_white)
-
         self.convert_lines_to_letters("./lines")
-        # self.result = self.send_to_OCR("./Squares")
-        # print(self.spell_check())
+        print('result:\n' + self.result)
+        self.spell_check()
+        print("after spell checking:\n" + self.result)
 
-        # apply all image processing on 'img'
+
+        # apply all image processing on 'self.img'
     def preprocess1(self):
         black_white_img = self.img.copy()
         # convert to to grayscale
         gray = cv2.cvtColor(black_white_img, cv2.COLOR_BGR2GRAY)
+
         # apply bilateral filter to remove noise while preserving edges
         blur = cv2.bilateralFilter(gray, 9, 75, 75)
+
         # threshold image to create a binary image
         _, thresh = cv2.threshold(
             blur, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
@@ -50,29 +56,32 @@ class text_recognition:
     def preprocess(self, img):
         # convert to to grayscale
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
         # apply bilateral filter to remove noise while preserving edges
         blur = cv2.bilateralFilter(gray, 9, 75, 75)
+
         # threshold image to create a binary image
         _, thresh = cv2.threshold(
             blur, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
 
         # remove noise by opening (erosion followed by dilation)
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-        # opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
+        opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
 
         # apply dilation
-        dilation = cv2.dilate(thresh, kernel, iterations=1)
+        dilation = cv2.dilate(opening, kernel, iterations=2)
         self.check_image(dilation, "afterwards")
         return dilation
+
     # returns image of one sentence
     def split_lines(self, img):
-        print("split_lines image",type(img))
         h1, w1 = img.shape
         if not os.path.exists("lines"):
             os.makedirs("lines")
         line_images = []
         contours, _ = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         j = 1
+
         for i in range(len(contours) - 1, -1, -1):
             contour = contours[i]
             x, y, w, h = cv2.boundingRect(contour)
@@ -82,12 +91,9 @@ class text_recognition:
         for i in range(len(line_images)):
             h, w, _ = line_images[i].shape
 
-            if w > w1 * 0.5 and h > h1 * 0.05:
-                #bin_i = bin(i)
-                # without_line = self.remove_bottom_line(line_images[i])
-
-                cv2.imwrite(f'lines\\{j}.jpg', line_images[i] )
-                self.brighten_image(f'lines\\{j}.jpg', 3)
+            if w > w1 * 0.5 and h > h1 * 0.08:
+                cv2.imwrite(f'lines\\{j}.jpg', line_images[i])
+                self.brighten_image(f'lines\\{j}.jpg', 2.5)
                 j += 1
 
 
@@ -101,57 +107,10 @@ class text_recognition:
         brightened_image = enhancer.enhance(brightness_factor)
         brightened_image_array = np.array(brightened_image)
         # output_path = "brightened_image.jpg"
-        print("brighten image", type(brightened_image_array))
         bw_sentence = self.preprocess(brightened_image_array)
         cv2.imwrite(image_path, bw_sentence)
 
-    def split_squares(self, line_path):
 
-        output_folder = "Squares"
-        space_threshold = 100  # Set the threshold distance to differentiate between letters and spaces (pixels)
-        os.makedirs(output_folder, exist_ok=True)
-        src_image = cv2.imread(line_path)
-
-        src_image = cv2.cvtColor(src_image, cv2.COLOR_BGR2GRAY)
-        # image = image.astype(np.uint8)
-
-        # Identify text regions using contour detection and sort the contours from left to right
-        contours, _ = cv2.findContours(src_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        contours = sorted(contours, key=lambda c: cv2.boundingRect(c)[0])
-
-        for i in range(len(contours)):
-            x, y, w, h = cv2.boundingRect(contours[i])
-
-            # Check if contour is too small or too wide, it might be noise
-            if w < 20 or h < 20 or w // h > 4 or w / h < 0.1:
-                continue
-
-            letter_image = src_image[y:y + h, x:x + w]
-            x1 = x
-            x2 = x + w
-            y1 = y
-            y2 = y + h
-
-            cv2.rectangle(src_image, (x1, y1), (x2, y2), (255, 255, 255), 2)
-
-
-            # Check the distance between the current contour and the next contour
-            if i < len(contours) - 1:
-                next_x, _, _, _ = cv2.boundingRect(contours[i + 1])
-                distance = (x + w) - next_x
-                print(distance)
-
-                if distance > space_threshold:  # create a blank space image
-                    space_image = np.ones_like(letter_image) * 255
-                    output_path = os.path.join(output_folder, f"space_{i}.jpg")
-                    cv2.imwrite(output_path, space_image)
-                    continue
-
-            # Save the letter
-            output_path = os.path.join(output_folder, f"letter_{x}.jpg")
-            cv2.imwrite(output_path, letter_image)
-
-        self.check_image(src_image, "with boxes")
 
 
     # create letter squares in a folder named "Squares"
@@ -161,22 +120,24 @@ class text_recognition:
                 filepath = os.path.join(lines_folder, filename)
                 split_l = Split_letters(filepath)
                 print(filepath)
-                self.result += self.send_to_OCR("Squares") + '\n'
+                sentence = self.send_to_OCR("Squares")
+                sentence_repaired = String_repair.check_string(sentence) + '\n'
+                self.result += sentence_repaired
+
                 #self.delete_folder("Squares")
                 self.move_folder("Squares")
 
     def send_to_OCR(self, letters_folder):
         result = ""
+        sorted_images = self.sort_numerically(letters_folder)
 
-        for filename in os.listdir(letters_folder):
-            if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp')):
-
-                if "space" in filename:
-                    result += " "
-                else:
-                    filepath = os.path.join(letters_folder, filename)
-                    character, value = self.predict_letter(filepath)
-                    result += character
+        for filename in sorted_images:
+            if "space" in filename:
+                result += " "
+            else:
+                filepath = os.path.join(letters_folder, filename)
+                character, value = self.predict_letter(filepath)
+                result += character
 
         print(result)
         return result
@@ -205,37 +166,8 @@ class text_recognition:
 
     def spell_check(self):
         Spell = Speller('he')
-        return Spell(self.result)
+        self.result = Spell(self.result)
 
-    def remove_bottom_line(self, image):
-
-        # image = cv2.imread(img)
-        # self.check_image(image,"xhexk")
-        # Convert the image to grayscale
-        # gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-        # Calculate the horizontal projection profile
-        projection = np.sum(image, axis=1)
-        print(projection, type(projection), projection.shape)
-
-        # Determine the threshold to identify the line
-        threshold = np.max(projection) * 0.2  # Adjust the threshold value as needed
-
-        # Detect the line region based on the projection profile
-        line_indices = np.where(projection > threshold)[0]
-        line_top = np.min(line_indices)
-        line_bottom = np.max(line_indices)
-
-        # Remove the line region from the image
-        result = np.copy(image)
-        result[line_top:line_bottom, :] = 0  # Set line region to white (or any desired background color)
-        return result
-
-        # Display the result
-        # cv2.imshow('Handwritten Text with Line', gray)
-        # cv2.imshow('Handwritten Text without Line', result)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
 
     @staticmethod
     def check_image(img, text):
@@ -260,6 +192,12 @@ class text_recognition:
         os.rename(source, new_name)
 
 
+    def sort_numerically(self, directory):
+        file_names = os.listdir(directory)
+        image_files = [file_name for file_name in file_names if file_name.endswith((".jpg", ".jpeg", ".png"))]
+        sorted_image_files = sorted(image_files, key=lambda x: (int(os.path.splitext(x)[0].split("_")[0]), x))
+
+        return  sorted_image_files
 
 
-text_rec = text_recognition("sentences/sentence5.jpg")
+text_rec = text_recognition("sentences/sofi1.jpg")
