@@ -88,6 +88,9 @@ class Split_letters:
 
 
                 distance = x - next_x - next_w
+                if w < avg_width * 0.3:
+                    distance = distance - w
+
                 print("distance", distance)
 
                 if distance < -50:
@@ -102,7 +105,7 @@ class Split_letters:
                     j += 1
 
 
-                if distance > space_threshold - 10:
+                if distance > space_threshold - 8:
                     print(w, "width")
                     print("it's a space")
                     space_image = np.ones_like(letter_image) * 255
@@ -136,6 +139,8 @@ class Split_letters:
                 next_x, _, next_w, _ = cv2.boundingRect(contours[i + 1])
                 distance = x - next_x
 
+                if distance < -50:
+                    continue
                 # distance = w + (next_x
 
                 total_distance += distance
@@ -144,8 +149,8 @@ class Split_letters:
                 total_w += w
                 avg_letter = total_w//squares_amount
 
-        if avg_letter < 87:
-            avg_letter = 87
+        if avg_letter < 90:
+            avg_letter = 90
 
         threshold = (total_distance / (squares_amount +1))
         if threshold < 90:
