@@ -42,13 +42,6 @@ class text_recognition:
         _, thresh = cv2.threshold(
             blur, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
 
-        # remove noise by opening (erosion followed by dilation)
-        # kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-        # opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
-
-        # apply dilation
-        # dilation = cv2.dilate(thresh, kernel, iterations=1)
-
         black_white_img = thresh
         self.check_image(black_white_img, "afterwards")
         return  black_white_img
@@ -119,7 +112,6 @@ class text_recognition:
             if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp')):
                 filepath = os.path.join(lines_folder, filename)
                 split_l = Split_letters(filepath)
-                print(filepath)
                 sentence = self.send_to_OCR("Squares")
                 sentence_repaired = String_repair.check_string(sentence) + '\n'
                 self.result += sentence_repaired

@@ -27,14 +27,8 @@ def check_string(string):
             fixed = fixed.replace("טן", "א")
             length = len(fixed)
 
-
-        # if 'רן' in fixed[:-1]:
-        #     fixed = fixed.replace("רן", "ק")
-        #     length = len(fixed)
-
-
-        if 'ן' in fixed[0:length-1]:
-            last_letter = fixed[length-1]
+        if 'ן' in fixed[0:length - 1]:
+            last_letter = fixed[length - 1]
             fixed = fixed[:-1].replace("ן", replace_for_nun[random.randint(0, 1)]) + last_letter
 
         if 'ך' in fixed[0:length - 1]:
