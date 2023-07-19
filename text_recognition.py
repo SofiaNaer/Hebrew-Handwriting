@@ -200,4 +200,4 @@ class text_recognition:
         return  sorted_image_files
 
 
-text_rec = text_recognition("sentences/sofi1.jpg")
+text_rec = text_recognition("sentences/ema is nine.jpg")

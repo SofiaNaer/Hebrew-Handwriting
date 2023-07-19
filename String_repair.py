@@ -5,29 +5,27 @@ def check_string(string):
     words = string.split()
     fixed_words = []
     random_number = random.randint(0, 1)
-    #final_form_letters = ["ך", "ם", "ף", "ץ"]
 
-    replace_for_mem = ["מ" ,"ב"]
-    replace_for_zadik = ["ד","ק"]
-    replace_for_nun = ["ו" ,"י"]
+    replace_for_mem = ["מ", "ב"]
+    replace_for_zadik = ["ד", "ק"]
+    replace_for_nun = ["ו", "י"]
 
     for word in words:
 
         length = len(word)
         fixed = word
 
-        if(length < 2):
+        if (length < 2):
             fixed_words.append(fixed)
             continue
 
-        if fixed[-2:] == 'רנ' or fixed[-2:] == 'חנ' :
+        if fixed[-2:] == 'רנ' or fixed[-2:] == 'חנ':
             fixed = fixed[:-2] + 'ת'
             length = len(fixed)
 
-
         if 'טן' in fixed[:-1]:
             fixed = fixed.replace("טן", "א")
-            length  = len(fixed)
+            length = len(fixed)
 
 
         # if 'רן' in fixed[:-1]:
@@ -39,27 +37,23 @@ def check_string(string):
             last_letter = fixed[length-1]
             fixed = fixed[:-1].replace("ן", replace_for_nun[random.randint(0, 1)]) + last_letter
 
-
-        if 'ך' in fixed[0:length-1]:
+        if 'ך' in fixed[0:length - 1]:
             last_letter = fixed[length - 1]
             fixed = fixed[:-1].replace("ך", "ו") + last_letter
 
-
-        if 'ף' in fixed[0:length-1]:
+        if 'ף' in fixed[0:length - 1]:
             last_letter = fixed[length - 1]
-            fixed = fixed[:-1].replace("ף" ,"ל")+last_letter
+            fixed = fixed[:-1].replace("ף", "ל") + last_letter
 
-
-        if 'ץ' in fixed[0:length-1]:
+        if 'ץ' in fixed[0:length - 1]:
             last_letter = fixed[length - 1]
             fixed = fixed[:-1].replace("ץ", replace_for_zadik[random.randint(0, 1)]) + last_letter
 
-        if 'ם' in fixed[0:length-1]:
+        if 'ם' in fixed[0:length - 1]:
             last_letter = fixed[length - 1]
             fixed = fixed[:-1].replace("ם", replace_for_mem[random.randint(0, 1)]) + last_letter
 
-
-        if fixed[length-1] == 'מ':
+        if fixed[length - 1] == 'מ':
             fixed = fixed[::-1].replace('מ', 'םי', 1)[::-1]
 
         fixed_words.append(fixed)
@@ -68,7 +62,6 @@ def check_string(string):
     print("after repairing", result)
 
     return result
-
 
 # # runner:
 # test_string_1 = 'פרויהטןם'

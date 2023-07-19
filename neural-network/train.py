@@ -77,7 +77,7 @@ ds_train = tf.keras.preprocessing.image_dataset_from_directory(
     image_size=(img_height, img_width),
     shuffle=True,
     seed=123,
-    validation_split=0.15,
+    validation_split=0.2,
     subset="training",
 )
 
@@ -113,7 +113,7 @@ model.compile(
     metrics=["accuracy"])
 
 print("\nFit model on training data:")
-model.fit(ds_train, epochs=15, verbose=2, validation_data=ds_validation)
+model.fit(ds_train, epochs=30, verbose=2, validation_data=ds_validation)
 model.summary()
 
 test_metrics = model.evaluate(ds_test, verbose=2)
