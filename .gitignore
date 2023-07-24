@@ -1,10 +1,7 @@
 
 # ignore all files in these directories:
-/neural-network/processing_templates/results/
-/neural-network/processing_templates/filled_in_templates/results
-/neural-network/processing_templates/DataSet/
+/processing_templates/filled_in_templates
 /neural-network/saved_model
-/prototype/letters/
 /dataset/
 /.vscode/
 /.idea/
